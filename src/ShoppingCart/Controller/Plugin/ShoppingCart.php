@@ -87,10 +87,18 @@ class ShoppingCart extends AbstractPlugin
         
         if ($this->isMultidimention($items)) {
             foreach ($items as $item) {
-                $this->session['cart'][$this->generateToken($item)] = $this->hydrator->hydrate($item, new $this->entityPrototype());
+				if (!isset($this->session['cart'][$item['id']])) {
+					$this->session['cart'][$item['id']] = $this->hydrator->hydrate($item, new $this->entityPrototype());
+				} else {
+					$this->session['cart'][$item['id']]->setQty($this->session['cart'][$item['id']]->getQty() + $item['qty']);
+				}
             }
         } else {
-            $this->session['cart'][$this->generateToken($items)] = $this->hydrator->hydrate($items, $this->entityPrototype);
+			if (!isset($this->session['cart'][$items['id']])) {
+				$this->session['cart'][$items['id']] = $this->hydrator->hydrate($items, $this->entityPrototype);
+			} else {
+				$this->session['cart'][$items['id']]->setQty($this->session['cart'][$items['id']]->getQty() + $items['qty']);
+			}
         }
         return true;
     }
@@ -106,7 +114,7 @@ class ShoppingCart extends AbstractPlugin
         if (! is_array($item) or empty($item)) {
             throw new \Exception('The value must be an array.');
         }
-        return sha1($item['id'] . $item['qty'] . time());
+        return $item['id'];
     }
 
     /**
